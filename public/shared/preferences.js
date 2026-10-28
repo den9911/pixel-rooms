@@ -1,7 +1,7 @@
 // Blocking, tiny, and local: apply the saved or system theme before styles paint.
 (() => {
   let saved={};try{saved=JSON.parse(localStorage.getItem('minute:preferences'))??{};}catch{}
-  const supported=['en','es','ru'];
+  const supported=['en','ru'];
   const preferred=(navigator.languages?.length?navigator.languages:[navigator.language]).map(value=>String(value).toLowerCase().split(/[-_]/)[0]);
   const language=supported.includes(saved.language)?saved.language:preferred.find(value=>supported.includes(value))??'en';
   const choice=['light','dark','system'].includes(saved.theme)?saved.theme:'system';

@@ -1,5 +1,5 @@
 const language=document.documentElement.lang;
-const locale=['en','es','ru'].includes(language)?language:'en';
+const locale=['en','ru'].includes(language)?language:'en';
 try{
   const path=location.pathname.endsWith('/')?`${location.pathname}index.html`:location.pathname;
   const response=await fetch(`/locales/${locale}/pages${path}`);
@@ -11,6 +11,6 @@ try{
   await import(`/locales/${locale}/shared/main.js`);
 }catch(error){
   const target=document.getElementById('app')??document.body;
-  target.textContent=({en:'Unable to load. Please reload the page.',es:'No se ha podido cargar. Recarga la página.',ru:'Не удалось загрузить. Обновите страницу.'})[locale];
+  target.textContent=({en:'Unable to load. Please reload the page.',ru:'Не удалось загрузить. Обновите страницу.'})[locale];
   console.error(error);
 }finally{delete document.documentElement.dataset.languageLoading;}

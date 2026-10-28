@@ -5,7 +5,7 @@ export async function performanceBudget(){
   let base=0;for(const file of common)base+=gzipSync(await readFile(`public/shared/${file}`)).length;
   const routes=['caption','majority','arena','memory','papers','decide','house','minute','finds','mischief'].filter(route=>true);
   const available=await readdir('public');const results={};
-  for(const language of ['en','es','ru']){
+  for(const language of ['en','ru']){
     let shared=base;for(const file of ['main.js','ui.js','project.js','scenes.js'])shared+=gzipSync(await readFile(`public/locales/${language}/shared/${file}`)).length;
     let maximum=0;
     for(const route of routes.filter(route=>available.includes(route))){

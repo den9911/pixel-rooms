@@ -1,4 +1,4 @@
-export const languages = ['en','es','ru'];
+export const languages = ['en','ru'];
 export function resolveLanguage(saved, preferred = []) {
   if (languages.includes(saved)) return saved;
   for (const value of preferred) {

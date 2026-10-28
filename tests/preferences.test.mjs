@@ -5,12 +5,12 @@ import { runInNewContext } from 'node:vm';
 import { resolveLanguage,resolveTheme } from '../public/shared/preferences-model.js';
 
 test('browser language negotiation and explicit preferences',()=>{
-  assert.equal(resolveLanguage(null,['es-MX','en-US']),'es');
-  assert.equal(resolveLanguage(null,['ru-RU','es']),'ru');
-  assert.equal(resolveLanguage(null,['fr-FR','es-ES']),'es');
+  assert.equal(resolveLanguage(null,['ru-RU','en-US']),'ru');
+  assert.equal(resolveLanguage(null,['ru-RU','ru']),'ru');
+  assert.equal(resolveLanguage(null,['fr-FR','ru-RU']),'ru');
   assert.equal(resolveLanguage(null,['fr-FR']),'en');
   assert.equal(resolveLanguage('en',['ru-RU']),'en');
-  assert.equal(resolveLanguage('bad',['ES-es']),'es');
+  assert.equal(resolveLanguage('bad',['RU-ru']),'ru');
   assert.equal(resolveTheme('system',true),'dark');assert.equal(resolveTheme('system',false),'light');
   assert.equal(resolveTheme('light',true),'light');assert.equal(resolveTheme('dark',false),'dark');
 });
@@ -18,7 +18,7 @@ test('browser language negotiation and explicit preferences',()=>{
 test('theme is applied before paint, even when storage is blocked',async()=>{
   const source=await readFile('public/shared/preferences.js','utf8');
   for(const [saved,preferred,dark,blocked,expectedLanguage,expectedTheme] of [
-    [{},['es-ES'],true,false,'es','dark'],
+    [{},['ru-RU'],true,false,'ru','dark'],
     [{language:'ru',theme:'light'},['en-US'],true,false,'ru','light'],
     [{},['fr','en-US'],false,true,'en','light'],
   ]){
@@ -29,7 +29,7 @@ test('theme is applied before paint, even when storage is blocked',async()=>{
 });
 
 test('editorial translation preserves user content and stable server identifiers',async()=>{
-  for(const language of ['en','es','ru']){
+  for(const language of ['en','ru']){
     const {localizeResponse,localizeError,categories}=await import(`../public/locales/${language}/shared/editorial.js`);
     assert.equal(categories[0].value,'Вывески');
     if(language!=='ru')assert.doesNotMatch(categories[0].label,/[А-Яа-яЁё]/);
@@ -51,5 +51,30 @@ test('core text, muted text, buttons, and accents meet 4.5:1 in both themes',()=
   for(const [bg,fg,muted,solid,onSolid,accent] of [['#fffdf7','#202c34','#53636d','#263940','#fffdf7','#b84024'],['#192832','#edf2ec','#b6c7cc','#dceadf','#13232a','#ffb18c']]){
     for(const color of [fg,muted,accent])assert.ok(contrast(bg,color)>=4.5,`${bg}/${color}`);
     assert.ok(contrast(solid,onSolid)>=4.5);
+  }
+});
+
+test('Russian negotiation, removed Spanish preference, and all theme choices',()=>{
+  assert.equal(resolveLanguage('ru',['en-US']),'ru');
+  assert.equal(resolveLanguage(null,['ru-RU','en-US']),'ru');
+  assert.equal(resolveLanguage('es',['es-ES']),'en');
+  assert.equal(resolveLanguage('es',['ru-RU']),'ru');
+  for(const osDark of [false,true]){
+    assert.equal(resolveTheme('system',osDark),osDark?'dark':'light');
+    assert.equal(resolveTheme(undefined,osDark),osDark?'dark':'light');
+    assert.equal(resolveTheme('invalid',osDark),osDark?'dark':'light');
+    assert.equal(resolveTheme('light',osDark),'light');
+    assert.equal(resolveTheme('dark',osDark),'dark');
+  }
+});
+test('early Russian preferences and explicit themes survive reload',async()=>{
+  const source=await readFile('public/shared/preferences.js','utf8');
+  for(const saved of [{language:'ru',theme:'system'},{language:'en',theme:'light'},{language:'ru',theme:'dark'},{language:'es',theme:'invalid'}]){
+    for(const osDark of [false,true]){
+      const root={dataset:{},style:{}};
+      runInNewContext(source,{localStorage:{getItem:()=>JSON.stringify(saved)},navigator:{languages:['ru-RU']},document:{documentElement:root},matchMedia:()=>({matches:osDark})});
+      assert.equal(root.lang,resolveLanguage(saved.language,['ru-RU']));
+      assert.equal(root.dataset.theme,resolveTheme(saved.theme,osDark));
+    }
   }
 });

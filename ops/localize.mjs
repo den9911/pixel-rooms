@@ -4,21 +4,21 @@ import { fileURLToPath } from 'node:url';
 
 const sourceRoot=fileURLToPath(new URL('../',import.meta.url));
 const rows=(await readFile(resolve(sourceRoot,'i18n/catalog.tsv'),'utf8')).split('\n').filter(line=>line&&!line.startsWith('#')).map(line=>line.split('|'));
-for(const row of rows)if(row.length!==3||row.some(value=>!value))throw new Error(`Invalid translation row: ${row[0]}`);
+for(const row of rows)if(row.length!==2||row.some(value=>!value))throw new Error(`Invalid translation row: ${row[0]}`);
 const unique=new Set();for(const [key] of rows){if(unique.has(key))throw new Error(`Duplicate translation: ${key}`);unique.add(key);}
 const sorted=[...rows].sort((a,b)=>b[0].length-a[0].length);
 const expression=new RegExp(sorted.map(([key])=>(/^[А-Яа-яЁё]/.test(key)?'(?<![А-Яа-яЁё])':'')+key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(/[А-Яа-яЁё]$/.test(key)?'(?![А-Яа-яЁё])':'')).join('|'),'g');
 const translations=new Map(rows.map(row=>[row[0],row]));
 export function translate(source,locale,isJavaScript=false){
   if(locale==='ru')return source;
-  return source.replace(expression,key=>{const result=translations.get(key)[locale==='es'?2:1];return isJavaScript?result.replaceAll("'",'\\u0027').replaceAll('`','\\u0060'):result;});
+  return source.replace(expression,key=>{const result=translations.get(key)[1];return isJavaScript?result.replaceAll("'",'\\u0027').replaceAll('`','\\u0060'):result;});
 }
 async function walk(root){const files=[];for(const entry of await readdir(root,{withFileTypes:true})){if(entry.name==='locales')continue;const path=resolve(root,entry.name);if(entry.isDirectory())files.push(...await walk(path));else files.push(path);}return files;}
 export async function localize(root){
   const publicRoot=resolve(root,'public');
   const files=await walk(publicRoot);
   await rm(resolve(publicRoot,'locales'),{recursive:true,force:true});
-  for(const locale of ['en','es','ru']){
+  for(const locale of ['en','ru']){
     for(const file of files){
       const name=relative(publicRoot,file).replaceAll('\\','/');
       if(!name.endsWith('.js')||['shared/boot.js','shared/preferences.js','shared/preferences-model.js','shared/settings.js'].includes(name))continue;
