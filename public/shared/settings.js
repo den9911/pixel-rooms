@@ -16,15 +16,24 @@ export function restoreForms(){
   if(!Array.isArray(fields))return;
   for(const entry of fields){const el=entry.id?document.getElementById(entry.id):[...document.querySelectorAll('[name]')].find(el=>el.name===entry.name);if(!el||el.closest('.preferences'))continue;el.value=entry.value;if(el.type==='checkbox')el.checked=entry.checked;el.dispatchEvent(new Event('input',{bubbles:true}));}
 }
+function preferenceGroup(kind,label,options,value){
+  return `<div class="preference-switch" role="group" aria-label="${label}">${options.map(([key,name,icon])=>`<button type="button" data-preference="${kind}" data-value="${key}" aria-label="${name}" title="${name}" aria-pressed="${key===value}">${icon?`<span aria-hidden="true">${icon}</span>`:name}</button>`).join('')}</div>`;
+}
 export function mountSettings(){
   const host=document.getElementById('preferences');if(!host)return;
-  const copy=labels[locale]??labels.en,saved=read();
-  host.innerHTML=`<label class="preference-field"><span>${copy.language}</span><select id="language-choice" aria-label="${copy.language}"><option value="en" lang="en">English</option><option value="ru" lang="ru">Русский</option></select></label><label class="preference-field theme-field"><span>${copy.theme}</span><select id="theme-choice" aria-label="${copy.theme}"><option value="system">◐ ${copy.system}</option><option value="light">☀ ${copy.light}</option><option value="dark">☾ ${copy.dark}</option></select></label>`;
-  const lang=document.getElementById('language-choice'),theme=document.getElementById('theme-choice');
-  lang.value=locale;theme.value=['system','light','dark'].includes(saved.theme)?saved.theme:'system';
-  apply(theme.value);
-  theme.addEventListener('change',()=>{save({...read(),theme:theme.value});apply(theme.value);});
-  lang.addEventListener('change',()=>{const language=resolveLanguage(lang.value);saveForms();window.dispatchEvent(new Event('minute:preferences-changing'));save({...read(),language});location.reload();});
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(!['light','dark'].includes(read().theme))apply('system');});
-  window.addEventListener('storage',e=>{if(e.key==='minute:preferences'){const value=read();theme.value=['light','dark'].includes(value.theme)?value.theme:'system';apply(theme.value);}});
+  document.documentElement.style.setProperty('--project-tint',getComputedStyle(document.body).getPropertyValue('--theme').trim());
+  const copy=labels[locale]??labels.en;
+  let selectedTheme=['light','dark'].includes(read().theme)?read().theme:'system';
+  const themeChoice=()=>selectedTheme;
+  host.innerHTML=preferenceGroup('language',copy.language,[['en','English','EN'],['ru','Русский','RU']],locale)+preferenceGroup('theme',copy.theme,[['system',copy.system,'◐'],['light',copy.light,'☀'],['dark',copy.dark,'☾']],themeChoice());
+  function updateTheme(){const choice=themeChoice();apply(choice);host.querySelectorAll('[data-preference="theme"]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.value===choice));}
+  updateTheme();
+  host.addEventListener('click',event=>{
+    const button=event.target.closest('button[data-preference]');if(!button||!host.contains(button))return;
+    const {preference,value}=button.dataset;
+    if(preference==='theme'){selectedTheme=value;save({...read(),theme:value});updateTheme();}
+    else if(value!==locale){const language=resolveLanguage(value);saveForms();window.dispatchEvent(new Event('minute:preferences-changing'));save({...read(),language});location.reload();}
+  });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themeChoice()==='system')updateTheme();});
+  window.addEventListener('storage',e=>{if(e.key==='minute:preferences'||e.key===null){selectedTheme=['light','dark'].includes(read().theme)?read().theme:'system';updateTheme();}});
 }
