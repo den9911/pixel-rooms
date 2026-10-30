@@ -25,6 +25,7 @@ Decorate a pixel room and explore a house built by its visitors.
 - Your own 16×16 room
 - Public gallery of community rooms
 - Local drafts before saving to the shared house
+- Download a clean PNG of your room, including unsaved drafts
 
 **Try the flow: Paint → save → explore the house.**
 
