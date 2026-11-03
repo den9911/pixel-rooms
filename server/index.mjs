@@ -1,3 +1,4 @@
+import {checkStartup} from './startup.mjs';
 import { createServer } from 'node:http';
 import { randomUUID, randomBytes, createHmac, timingSafeEqual, createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile, stat } from 'node:fs/promises';
@@ -319,10 +320,18 @@ export async function createApp(options = {}) {
 }
 
 if (process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
-  const {server}=await createApp();
   const portFlag=process.argv.indexOf('--port'),hostFlag=process.argv.indexOf('--host');
   const port=Number(portFlag>=0?process.argv[portFlag+1]:process.env.PORT??3000);
   const host=hostFlag>=0?process.argv[hostFlag+1]:process.env.HOST??'127.0.0.1';
-  server.listen(port,host,()=>console.log(`Minute Club listening on ${JSON.stringify(server.address())}`));
-  for (const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>server.close(()=>process.exit(0)));
+  try{
+    if(typeof host!=='string'||!host.trim())throw new Error('Provide a HOST or --host value / Укажите HOST');
+    const checked=await checkStartup({port,host});
+    if(process.argv.includes('--check'))console.log(`Startup checks passed / Проверки запуска пройдены: ${JSON.stringify(checked)}`);
+    else{
+      const {server}=await createApp();
+      server.on('error',()=>{console.error('Cannot start server; check local address and permissions / Не удалось запустить сервер');process.exitCode=1;server.close();});
+      server.listen(port,host,()=>console.log(`Minute Club listening on ${JSON.stringify(server.address())}`));
+      for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>server.close(()=>process.exit(0)));
+    }
+  }catch(error){console.error(error.message??'Startup failed / Ошибка запуска');process.exitCode=1;}
 }

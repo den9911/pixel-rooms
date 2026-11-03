@@ -66,3 +66,12 @@ Every browser owns one 16×16 room. The gallery is public, room writes check own
 [More by den9911](https://github.com/den9911) · [Report an issue](https://github.com/den9911/pixel-rooms/issues) · [LICENSE](LICENSE)
 
 Editor tools include connected-area fill, an eyedropper, mirrored brush strokes and an optional grid. Fill is one undoable action; the grid and cursor are excluded from PNG exports. Publishing still requires Save.
+
+
+## Recent improvements / Последние улучшения
+
+Undo/Redo covers one editor gesture or action; a new drawing action clears Redo. History is local and bounded, and never publishes a room automatically.
+
+Отмена и повтор работают с жестом/действием; новое рисование очищает повтор. История локальная и ограниченная, без автоматической публикации.
+
+Startup diagnostics / Проверка запуска: `node server/index.mjs --check` checks the local address, configuration and writable data location without creating a database or starting the API. To use another port: `--port 3005`. No tokens are printed. / База и сервер при проверке не создаются; секреты не выводятся.

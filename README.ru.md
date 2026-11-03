@@ -74,3 +74,12 @@ npm run check
 [Другие проекты den9911](https://github.com/den9911) · [Сообщить о проблеме](https://github.com/den9911/pixel-rooms/issues) · [LICENSE](LICENSE)
 
 В редакторе есть заливка связной области, пипетка, симметрия кисти и отключаемая сетка. Заливка отменяется одним действием; сетка и курсор не попадают в PNG. Публикация по-прежнему требует сохранения.
+
+
+## Recent improvements / Последние улучшения
+
+Undo/Redo covers one editor gesture or action; a new drawing action clears Redo. History is local and bounded, and never publishes a room automatically.
+
+Отмена и повтор работают с жестом/действием; новое рисование очищает повтор. История локальная и ограниченная, без автоматической публикации.
+
+Startup diagnostics / Проверка запуска: `node server/index.mjs --check` checks the local address, configuration and writable data location without creating a database or starting the API. To use another port: `--port 3005`. No tokens are printed. / База и сервер при проверке не создаются; секреты не выводятся.
