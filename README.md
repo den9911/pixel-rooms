@@ -64,3 +64,5 @@ Every browser owns one 16×16 room. The gallery is public, room writes check own
 ---
 
 [More by den9911](https://github.com/den9911) · [Report an issue](https://github.com/den9911/pixel-rooms/issues) · [LICENSE](LICENSE)
+
+Editor tools include connected-area fill, an eyedropper, mirrored brush strokes and an optional grid. Fill is one undoable action; the grid and cursor are excluded from PNG exports. Publishing still requires Save.
